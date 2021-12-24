@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
+	//"log"
 	"runtime"
 	"strings"
 
-	"github.com/go-gl/gl/v4.1-core/gl" // OR: github.com/go-gl/gl/v2.1/gl
+	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -33,8 +33,6 @@ const (
 
 var (
 	triangle = []float32{
-		-0.5, -0.5, 0,
-		0.5, 0.5, 0,
 		-0.5, 0.5, 0,
 		-0.5, -0.5, 0,
 		0.5, 0.5, 0,
@@ -60,7 +58,8 @@ func draw(vao uint32, window *glfw.Window, program uint32) {
 	gl.UseProgram(program)
 
 	gl.BindVertexArray(vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
+	//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
+	gl.DrawArrays(gl.TRIANGLE_STRIP, 0, int32(len(triangle)/3))
 
 	glfw.PollEvents()
 	window.SwapBuffers()
@@ -91,8 +90,8 @@ func initOpenGL() uint32 {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
-	version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Println("OpenGL version", version)
+	//version := gl.GoStr(gl.GetString(gl.VERSION))
+	//log.Println("OpenGL version", version)
 
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
