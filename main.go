@@ -45,15 +45,16 @@ func draw(game *Game) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(game.drawData.program)
 
-	cube := New_Cube(0.0, 0.0, 0.0)
-	cube = append(cube, New_Cube(-1.0, -1.0, 0)...)
+	cube := New_Cube(-0.5, -0.5, 0)
+	cube = append(cube, New_Cube(0.0, 0.0, 0.0)...)
+	cube = append(cube, New_Cube(0.5, 0.5, 0)...)
 	//gl.BindVertexArray(vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, game.drawData.VAO)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(cube)*4, gl.Ptr(cube))
 	//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
 	//gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 8)
-	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, 8)
-
+	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 12, 4) //Count is the number of points | Instancecount is the number of points to draw
+	gl.UseProgram(0)
 	glfw.PollEvents()
 	game.win.SwapBuffers()
 }

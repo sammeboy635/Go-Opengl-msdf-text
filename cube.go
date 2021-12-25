@@ -34,6 +34,16 @@ func New_Cube(x float32, y float32, z float32) []float32 {
 
 	return cube
 }
+func New_Triangle(x float32, y float32, z float32) []float32 {
+	X := x + size
+	Y := y + size
+	triangle := []float32{
+		x, Y, z,
+		x, y, z,
+		X, Y, z,
+	}
+	return triangle
+}
 func Print_Cube(cube []float32) {
 	for c := range cube {
 		fmt.Printf("%v", c)
