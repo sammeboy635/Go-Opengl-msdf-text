@@ -14,7 +14,7 @@ func Create_Window() *glfw.Window {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
-
+	//glfw.WindowHint(glfw.OpenGLDebugContext, glfw.True)
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
@@ -27,6 +27,7 @@ func Create_Window() *glfw.Window {
 	}
 	window.MakeContextCurrent()
 
+	gl.Enable(gl.DEPTH_TEST)
 	//window.SetMouseButtonCallback(callback.mouse_button())
 
 	return window

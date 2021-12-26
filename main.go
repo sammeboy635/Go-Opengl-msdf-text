@@ -3,7 +3,6 @@ package main
 import (
 	"runtime"
 
-	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
@@ -22,8 +21,9 @@ var (
 )
 
 type Game struct {
-	win      *glfw.Window
-	drawData DrawData
+	win       *glfw.Window
+	drawBlock DrawData
+	drawText  DrawData
 }
 
 func main() {
@@ -33,32 +33,12 @@ func main() {
 	game.win = Create_Window()
 	defer glfw.Terminate()
 
-	game.drawData = New_Create_DrawData()
+	//game.drawBlock = New_Create_DrawData_Block()
+	game.drawText = New_Create_DrawData_Text()
 
 	for !game.win.ShouldClose() {
-		draw(&game)
+
+		Draw_Text(&game)
+		//Draw_Cube(&game)
 	}
 }
-
-func draw(game *Game) {
-
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(game.drawData.program)
-
-	cube := New_Cube(-0.5, -0.5, 0)
-	cube = append(cube, New_Cube(0.0, 0.0, 0.0)...)
-	cube = append(cube, New_Cube(0.5, 0.5, 0)...)
-	//gl.BindVertexArray(vao)
-	gl.BindBuffer(gl.ARRAY_BUFFER, game.drawData.VAO)
-	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(cube)*4, gl.Ptr(cube))
-	//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
-	//gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 8)
-	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 12, 4) //Count is the number of points | Instancecount is the number of points to draw
-	gl.UseProgram(0)
-	glfw.PollEvents()
-	game.win.SwapBuffers()
-}
-
-// initGlfw initializes glfw and returns a Window to use.
-
-// makeVao initializes and returns a vertex array from the points provided.

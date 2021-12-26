@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	_ "image/png"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -12,35 +16,13 @@ type DrawData struct {
 	program uint32
 	VAO     uint32
 	VAOSize int
-}
-
-func New_Create_DrawData() DrawData {
-	var drawData DrawData
-	drawData.program = Create_Program("shader/frag.shadder", "shader/vert.shadder")
-	drawData.VAO = Create_Dynamic_Vao(1024)
-	drawData.VAOSize = 1024
-
-	return drawData
-}
-
-func Create_Dynamic_Vao(_size int) uint32 {
-	var vbo uint32
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, _size, nil, gl.DYNAMIC_DRAW)
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
-
-	return vao
+	VBO     uint32
+	image   uint32
 }
 
 func Create_Program(_fragmentShaderSource string, _vertexShaderSource string) uint32 {
 
+	//Todo have a debug const for printing errors
 	//version := gl.GoStr(gl.GetString(gl.VERSION))
 	//log.Println("OpenGL version", version)
 
@@ -62,6 +44,19 @@ func Create_Program(_fragmentShaderSource string, _vertexShaderSource string) ui
 	gl.AttachShader(prog, vertexShader)
 	gl.AttachShader(prog, fragmentShader)
 	gl.LinkProgram(prog)
+
+	//Error Handling for linking the program
+	var status int32
+	gl.GetProgramiv(prog, gl.LINK_STATUS, &status)
+	if status == gl.FALSE {
+		var logLength int32
+		gl.GetProgramiv(prog, gl.INFO_LOG_LENGTH, &logLength)
+
+		log := strings.Repeat("\x00", int(logLength+1))
+		gl.GetProgramInfoLog(prog, logLength, nil, gl.Str(log))
+
+		fmt.Println("failed to link program:", log)
+	}
 
 	//Delete shaders
 	gl.DeleteShader(vertexShader)
@@ -100,4 +95,54 @@ func Read_File(_location string) string {
 		panic("File Error: ")
 	}
 	return (string(data) + "\x00")
+}
+
+// loadImage opens an image file, upload it the the GPU and returns the texture id
+func loadImage(file string) uint32 {
+	imgFile, err := os.Open(file)
+	if err != nil {
+		println("Problem opening image:")
+		panic(err)
+	}
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		println("Problem decoding the image:")
+		panic(err)
+	}
+
+	rgba := image.NewRGBA(img.Bounds())
+	if rgba.Stride != rgba.Rect.Size().X*4 {
+		panic("incorret stride")
+	}
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+
+	return loadTexture(rgba)
+}
+
+func loadTexture(rgba *image.RGBA) uint32 {
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.ActiveTexture(gl.TEXTURE0)
+
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+	//gl.PixelStorei(gl.UNPACK_ROW_LENGTH, 0)
+	gl.TexImage2D(
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(rgba.Rect.Size().X),
+		int32(rgba.Rect.Size().Y),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(rgba.Pix))
+
+	return texture
 }
