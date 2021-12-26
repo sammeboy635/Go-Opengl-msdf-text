@@ -20,7 +20,7 @@ type Cube struct {
 }
 
 const (
-	size = 50
+	size = 0.5
 )
 
 func Draw_Cube(game *Game) {
@@ -36,7 +36,7 @@ func Draw_Cube(game *Game) {
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(cube)*4, gl.Ptr(cube))
 	//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
 	//gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 8)
-	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 12, 4) //Count is the number of points | Instancecount is the number of points to draw
+	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 12, 3) //Count is the number of points | Instancecount is the number of points to draw
 	gl.UseProgram(0)
 	glfw.PollEvents()
 	game.win.SwapBuffers()

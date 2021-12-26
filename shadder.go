@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"image/draw"
 	_ "image/png"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -58,7 +55,7 @@ func Create_Program(_fragmentShaderSource string, _vertexShaderSource string) ui
 		fmt.Println("failed to link program:", log)
 	}
 
-	//Delete shaders
+	//Delete the shaders after they have been binded
 	gl.DeleteShader(vertexShader)
 	gl.DeleteShader(fragmentShader)
 
@@ -98,51 +95,3 @@ func Read_File(_location string) string {
 }
 
 // loadImage opens an image file, upload it the the GPU and returns the texture id
-func loadImage(file string) uint32 {
-	imgFile, err := os.Open(file)
-	if err != nil {
-		println("Problem opening image:")
-		panic(err)
-	}
-	img, _, err := image.Decode(imgFile)
-	if err != nil {
-		println("Problem decoding the image:")
-		panic(err)
-	}
-
-	rgba := image.NewRGBA(img.Bounds())
-	if rgba.Stride != rgba.Rect.Size().X*4 {
-		panic("incorret stride")
-	}
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-
-	return loadTexture(rgba)
-}
-
-func loadTexture(rgba *image.RGBA) uint32 {
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.ActiveTexture(gl.TEXTURE0)
-
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-	//gl.PixelStorei(gl.UNPACK_ROW_LENGTH, 0)
-	gl.TexImage2D(
-		gl.TEXTURE_2D,
-		0,
-		gl.RGBA,
-		int32(rgba.Rect.Size().X),
-		int32(rgba.Rect.Size().Y),
-		0,
-		gl.RGBA,
-		gl.UNSIGNED_BYTE,
-		gl.Ptr(rgba.Pix))
-
-	return texture
-}

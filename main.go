@@ -28,6 +28,7 @@ type Game struct {
 
 func main() {
 
+	Text_Json_Parsing("custom-msdf/custom-msdf.json")
 	var game Game
 	runtime.LockOSThread()
 	game.win = Create_Window()
@@ -38,7 +39,7 @@ func main() {
 
 	for !game.win.ShouldClose() {
 
-		Draw_Text(&game)
+		//Draw_Text(&game)
 		//Draw_Cube(&game)
 	}
 }

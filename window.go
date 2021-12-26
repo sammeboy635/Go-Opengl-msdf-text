@@ -21,13 +21,13 @@ func Create_Window() *glfw.Window {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	window, err := glfw.CreateWindow(width, height, "Conway's Game of Life", nil, nil)
+	window, err := glfw.CreateWindow(width, height, "Sam Waite", nil, nil)
 	if err != nil {
 		panic(err)
 	}
 	window.MakeContextCurrent()
 
-	gl.Enable(gl.DEPTH_TEST)
+	//gl.Enable(gl.DEPTH_TEST)
 	//window.SetMouseButtonCallback(callback.mouse_button())
 
 	return window
