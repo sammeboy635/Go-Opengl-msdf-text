@@ -1,4 +1,4 @@
-#version 140
+#version 410
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
 #define COMPAT_ATTRIBUTE in
@@ -11,11 +11,11 @@ out vec4 COMPAT_FRAGCOLOR;
 #define COMPAT_TEXTURE texture2D
 #define COMPAT_FRAGCOLOR gl_FragColor
 #endif
-COMPAT_ATTRIBUTE vec2 vert;
-COMPAT_ATTRIBUTE vec2 vertTexCoord;
-COMPAT_VARYING vec2 fragTexCoord;
+layout (location = 0) in vec4 vert;
+//COMPAT_ATTRIBUTE vec2 vertTexCoord;
+out vec2 fragTexCoord;
 uniform mat4 projection;
 void main() {
-  fragTexCoord = vertTexCoord;
-  gl_Position = projection * vec4(vert, 0.0, 1.0);
+  fragTexCoord = vert.zw;
+  gl_Position = projection * vec4(vert.xy, 0.0, 1.0);
 }

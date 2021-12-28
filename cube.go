@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type Vec3 struct {
@@ -20,26 +19,29 @@ type Cube struct {
 }
 
 const (
-	size = 0.5
+	size = 0.25
 )
 
 func Draw_Cube(game *Game) {
-
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	cube := New_Cube(-0.5, 0.5, 0)
+	cube = append(cube, New_Cube(0.0, 0.0, 0)...)
+	first := []int32{0, 4}
+	count := []int32{4, 4}
+	num := int32(2) //int32(len(cube) / 12)
 	gl.UseProgram(game.drawBlock.program)
 
-	cube := New_Cube(-0.5, -0.5, 0)
-	cube = append(cube, New_Cube(0.0, 0.0, 0.0)...)
-	cube = append(cube, New_Cube(0.5, 0.5, 0)...)
-	//gl.BindVertexArray(vao)
+	gl.BindVertexArray(game.drawBlock.VAO)
 	gl.BindBuffer(gl.ARRAY_BUFFER, game.drawBlock.VAO)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(cube)*4, gl.Ptr(cube))
 	//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
-	//gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 8)
-	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 12, 3) //Count is the number of points | Instancecount is the number of points to draw
+	//gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 4)
+	//gl.DrawArrays(gl.TRIANGLE_STRIP, 4, 8)
+	//gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 2) //Count is the number of points | Instancecount is the number of points to draw
+	gl.MultiDrawArrays(gl.TRIANGLE_STRIP, &first[0], &count[0], num)
 	gl.UseProgram(0)
-	glfw.PollEvents()
-	game.win.SwapBuffers()
+	gl.BindVertexArray(0)
+	//glfw.PollEvents()
+	//game.win.SwapBuffers()
 }
 
 func New_Create_DrawData_Block() DrawData {
@@ -52,17 +54,21 @@ func New_Create_DrawData_Block() DrawData {
 }
 
 func Create_Dynamic_Vao_Block(_size int) (uint32, uint32) {
-	var vbo uint32
+	var vao, vbo uint32
+	//Gen the buffers
+	gl.GenVertexArrays(1, &vao)
 	gl.GenBuffers(1, &vbo)
+	//Bind the Buffers
+	gl.BindVertexArray(vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+
+	//Set the buffer data
 	gl.BufferData(gl.ARRAY_BUFFER, _size, nil, gl.DYNAMIC_DRAW)
 
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
+	//Set the attrib of the buffer array
+	//	Location 0 vec3 position
 	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, nil)
 
 	return vao, vbo
 }

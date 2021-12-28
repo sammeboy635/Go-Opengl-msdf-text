@@ -2,64 +2,48 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"image"
 	"image/draw"
 	"io/ioutil"
 	"os"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/glfw/v3.3/glfw"
 	mgl "github.com/go-gl/mathgl/mgl32"
 )
 
-type Glyph struct {
-	X      int `json:"x"`
-	Y      int `json:"y"`
-	Width  int `json:"width"`
-	Height int `json:"height"`
-}
-type Glyphs struct {
-	Glyph []Glyph `json:"chars"`
-}
-
 func Draw_Text(game *Game) {
-	x := float32(0.0)
-	y := float32(0.0)
-	X := float32(0.017578125)
-	Y := float32(0.095703125)
-	x1 := float32(0)
-	X1 := float32(16)
-	y1 := float32(0)
-	Y1 := float32(96)
-	var vertices = []float32{
-		// X, Y, U, V
-		x1, y1, x, Y, // left-bottom
-		x1, Y1, x, y, // left-top
-		X1, y1, X, Y, // right-bottom
-		X1, Y1, X, y, // right-top
-	}
-	gl.ClearColor(0.5, 1.0, 1.0, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	var vertices = make([]float32, (len("Dildosers Test{69}") * 16))
+	Text_Render_Text(vertices, "Dildosers Test{69}")
+
+	//Use Program
 	gl.UseProgram(game.drawText.program)
 
+	//Blend Enable
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
+	//Binding textures
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, game.drawText.image)
 
+	//Binding VAO and applying subdata
+	gl.BindVertexArray(game.drawText.VAO)
 	gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
 
-	//gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 4)
-	gl.DrawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 1) //Count is the number of points | Instancecount is the number of points to draw
-	gl.UseProgram(0)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	glfw.PollEvents()
-	game.win.SwapBuffers()
-}
+	i := 0
+	len := len(vertices) / 16
+	for ; i <= len; i += 1 {
+		gl.DrawArrays(gl.TRIANGLE_STRIP, int32(i*4), 4)
+	}
 
+	//vertices = nil
+	//Unbiding Everything
+	gl.UseProgram(0)
+	gl.Disable(gl.BLEND)
+	gl.BindVertexArray(0)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+}
 func New_Create_DrawData_Text() DrawData {
 	var drawData DrawData
 	drawData.program = Create_Program("shader/textFrag.shadder", "shader/textVert.shadder")
@@ -70,7 +54,6 @@ func New_Create_DrawData_Text() DrawData {
 
 	return drawData
 }
-
 func Set_Program_Matrix(_program uint32) {
 
 	//Preparing for Projection Matrix
@@ -82,31 +65,29 @@ func Set_Program_Matrix(_program uint32) {
 	gl.UseProgram(_program)                                             //Bind program to set uninform in GPU
 	gl.UniformMatrix4fv(glProjectionLocation, 1, false, &projection[0]) //Setting Projections
 
-	vertAttrib := uint32(gl.GetAttribLocation(_program, gl.Str("vert\x00")))
-	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 2, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
-
-	texCoordAttrib := uint32(gl.GetAttribLocation(_program, gl.Str("vertTexCoord\x00")))
-	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 4*4, gl.PtrOffset(2*4))
-	//gl.UseProgram(0) //Unbind program after.
 }
 
 func Create_Dynamic_Vao_Text(_program uint32, _size int) (uint32, uint32) {
-	var vbo uint32
+
+	var vao, vbo uint32
+	//Gen the buffers
+	gl.GenVertexArrays(1, &vao)
 	gl.GenBuffers(1, &vbo)
+
+	//Bind the Buffers
+	gl.BindVertexArray(vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+
+	//Set the buffer data
 	gl.BufferData(gl.ARRAY_BUFFER, _size, nil, gl.DYNAMIC_DRAW)
 
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-
-	//gl.VertexAttribPointer(0, 4, gl.FLOAT, false, 0, nil)
+	//Set the attrib of the buffer array
+	//	Location 0 vec4 vec2 positon & vec2 texture position
+	gl.EnableVertexAttribArray(0)
+	gl.VertexAttribPointer(0, 4, gl.FLOAT, false, 4*4, nil)
 
 	return vao, vbo
 }
-
 func loadImage(_file string) uint32 {
 	imgFile, err := os.Open(_file)
 	if err != nil {
@@ -127,7 +108,6 @@ func loadImage(_file string) uint32 {
 
 	return loadTexture(rgba)
 }
-
 func loadTexture(_rgba *image.RGBA) uint32 {
 	var texture uint32
 	gl.GenTextures(1, &texture)
@@ -156,7 +136,24 @@ func loadTexture(_rgba *image.RGBA) uint32 {
 	return texture
 }
 
-func Text_Json_Parsing(_jsonFile string) {
+//-----JSON FOR TEXT ------
+
+type Glyph struct {
+	x        float32
+	y        float32
+	X        float32 `json:"x"`
+	Y        float32 `json:"y"`
+	W        float32 `json:"width"`
+	H        float32 `json:"height"`
+	Xadvance float32 `json:"xadvance"`
+	Id       byte    `json:"id"`
+}
+type Glyphs struct {
+	Glyph []Glyph `json:"chars"`
+}
+
+func Text_Json_Parsing(_jsonFile string) map[byte]Glyph {
+	//Parses custom-msdf.json for information to how each charater is mapped inside the custom.png
 	jsonFile, err := os.Open(_jsonFile)
 	if err != nil {
 		println("Problem opening image:")
@@ -165,24 +162,91 @@ func Text_Json_Parsing(_jsonFile string) {
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-	// we initialize our Users array
+	// we initialize our Glyphs array
 	var glyph Glyphs
 
 	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'users' which we defined above
+	// jsonFile's content into 'glyphs' which we defined above
 	err = json.Unmarshal(byteValue, &glyph)
 
 	if err != nil {
 		println("Problem Unmarshaling data:")
 		panic(err)
 	}
-	// we iterate through every user within our users array and
-	// print out the user Type, their name, and their facebook url
-	// as just an example
+	mapping := make(map[byte]Glyph)
+	//Change the constants with actuall data from image like the 512
 	for i := 0; i < len(glyph.Glyph); i++ {
-		fmt.Println("x: ", glyph.Glyph[i].X)
-		fmt.Println("y: ", glyph.Glyph[i].Y)
-		fmt.Println("width: ", glyph.Glyph[i].Width)
-		fmt.Println("height: ", glyph.Glyph[i].Height)
+		if glyph.Glyph[i].X == 0 {
+			glyph.Glyph[i].x = 0
+		} else {
+			glyph.Glyph[i].x = glyph.Glyph[i].X / 512 //Divid by png size
+		}
+
+		if glyph.Glyph[i].Y == 0 {
+			glyph.Glyph[i].y = 0
+		} else {
+			glyph.Glyph[i].y = glyph.Glyph[i].Y / 512
+		}
+
+		glyph.Glyph[i].X = (glyph.Glyph[i].X + glyph.Glyph[i].W) / 512
+		glyph.Glyph[i].Y = (glyph.Glyph[i].Y + glyph.Glyph[i].H) / 512
+		mapping[glyph.Glyph[i].Id] = glyph.Glyph[i]
 	}
+	return mapping
+	/*for _, v := range mapping {
+		fmt.Println("x: ", v.x)
+		fmt.Println("y: ", v.y)
+		fmt.Println("X: ", v.X)
+		fmt.Println("Y: ", v.Y)
+		fmt.Println("width: ", v.W)
+		fmt.Println("height: ", v.H)
+		fmt.Println("Id: ", v.Id)
+	}*/
+	/* //Debugging print
+	for i := 0; i < len(glyph.Glyph); i++ {
+		fmt.Println("x: ", glyph.Glyph[i].x)
+		fmt.Println("y: ", glyph.Glyph[i].y)
+		fmt.Println("X: ", glyph.Glyph[i].X)
+		fmt.Println("Y: ", glyph.Glyph[i].Y)
+		fmt.Println("width: ", glyph.Glyph[i].W)
+		fmt.Println("height: ", glyph.Glyph[i].H)
+		fmt.Println("Id: ", glyph.Glyph[i].Id)
+	}
+	*/
+}
+
+func Text_Render_Text(textVert []float32, _sentence string) []float32 {
+	var x, y int
+	x = 10
+	y = 10
+	//length := len(_sentence) * 4
+	//var textVert []float32
+
+	for _, v := range _sentence {
+		if byte(v) == 32 {
+			x = int(16 + float32(x))
+		} else {
+			glyph := mapping[byte(v)]
+			array := Text_Render_Char(glyph, x, y)
+			textVert = append(textVert, array...)
+			x = int(glyph.Xadvance + float32(x))
+		}
+	}
+	return textVert
+}
+
+func Text_Render_Char(g Glyph, _x int, _y int) []float32 {
+	x := float32(_x)
+	y := float32(_y)
+	X := g.W + x
+	Y := g.H + y
+
+	var vertices = []float32{
+		// X, Y, U, V
+		x, y, g.x, g.Y, // left-bottom
+		x, Y, g.x, g.y, // left-top
+		X, y, g.X, g.Y, // right-bottom
+		X, Y, g.X, g.y, // right-top
+	}
+	return vertices
 }
