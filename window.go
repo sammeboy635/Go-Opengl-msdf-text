@@ -15,7 +15,7 @@ func Create_Window() *glfw.Window {
 		panic(err)
 	}
 	//glfw.WindowHint(glfw.OpenGLDebugContext, glfw.True)
-	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -29,7 +29,20 @@ func Create_Window() *glfw.Window {
 
 	//gl.Enable(gl.DEPTH_TEST)
 	//window.SetMouseButtonCallback(callback.mouse_button())
-	window.SetResize
+
+	window.SetFramebufferSizeCallback(window_size_callback)
+	window.SetKeyCallback(window_key_callback)
+	window.SetMouseButtonCallback(window_mouse_button_callback)
 
 	return window
+}
+
+func window_size_callback(win *glfw.Window, width int, height int) {
+	println("hello")
+}
+func window_key_callback(win *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	println(key, action, mods)
+}
+func window_mouse_button_callback(win *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
+	println("Mouse click")
 }
