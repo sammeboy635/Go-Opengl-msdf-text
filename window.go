@@ -29,6 +29,7 @@ func Create_Window() *glfw.Window {
 
 	//gl.Enable(gl.DEPTH_TEST)
 	//window.SetMouseButtonCallback(callback.mouse_button())
+	window.SetResize
 
 	return window
 }

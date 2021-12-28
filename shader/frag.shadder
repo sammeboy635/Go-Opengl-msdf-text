@@ -1,5 +1,14 @@
 #version 410
+
+//texture tex
+uniform sampler2D tex;
+
+//Takes in the fragTexCoord from frag shadder
+in vec2 fragTexCoord;
+
+//Out for the graphics color
 out vec4 frag_colour;
+
 void main() {
     frag_colour = vec4(1, 1, 1, 1.0);
 }

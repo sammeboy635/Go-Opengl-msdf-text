@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"runtime"
+	"time"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -14,6 +15,10 @@ const (
 )
 
 var mapping map[byte]Glyph
+var textRendered bool
+var textLength int
+var cubeRendered bool
+
 var (
 	triangle = []float32{
 		-0.5, 0.5, 0,
@@ -50,17 +55,20 @@ func main() {
 	game.win = Create_Window()
 	defer glfw.Terminate()
 
+	textRendered = false
+	cubeRendered = false
 	game.drawBlock = New_Create_DrawData_Block()
 	game.drawText = New_Create_DrawData_Text()
 	PrintMemUsage()
 	gl.ClearColor(0.5, 1, 1.0, 1)
 	for !game.win.ShouldClose() {
-
+		time.Sleep(100 * time.Millisecond)
+		//PrintMemUsage()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		Draw_Text(&game)
 		Draw_Cube(&game)
 		glfw.PollEvents()
 		game.win.SwapBuffers()
 	}
-	PrintMemUsage()
+
 }

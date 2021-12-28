@@ -12,11 +12,19 @@ import (
 )
 
 func Draw_Text(game *Game) {
-	var vertices = make([]float32, (len("Dildosers Test{69}") * 16))
-	Text_Render_Text(vertices, "Dildosers Test{69}")
+	gl.UseProgram(game.drawText.program)
+
+	if textRendered == false {
+		var vertices = make([]float32, (len("Dildosers Test{69}") * 16))
+		Text_Render_Text(vertices, "Dildosers Test{69}")
+		textLength = len(vertices) / 16
+		gl.BindVertexArray(game.drawText.VAO)
+		gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
+		textRendered = true
+	}
 
 	//Use Program
-	gl.UseProgram(game.drawText.program)
 
 	//Blend Enable
 	gl.Enable(gl.BLEND)
@@ -28,12 +36,11 @@ func Draw_Text(game *Game) {
 
 	//Binding VAO and applying subdata
 	gl.BindVertexArray(game.drawText.VAO)
-	gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
-	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
+	//gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
+	//gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
 
 	i := 0
-	len := len(vertices) / 16
-	for ; i <= len; i += 1 {
+	for ; i <= textLength; i += 1 {
 		gl.DrawArrays(gl.TRIANGLE_STRIP, int32(i*4), 4)
 	}
 
@@ -88,6 +95,8 @@ func Create_Dynamic_Vao_Text(_program uint32, _size int) (uint32, uint32) {
 
 	return vao, vbo
 }
+
+//Loading image from file
 func loadImage(_file string) uint32 {
 	imgFile, err := os.Open(_file)
 	if err != nil {
@@ -121,7 +130,6 @@ func loadTexture(_rgba *image.RGBA) uint32 {
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
-	//gl.PixelStorei(gl.UNPACK_ROW_LENGTH, 0)
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,
@@ -153,6 +161,7 @@ type Glyphs struct {
 }
 
 func Text_Json_Parsing(_jsonFile string) map[byte]Glyph {
+	//todo: take out const of img size
 	//Parses custom-msdf.json for information to how each charater is mapped inside the custom.png
 	jsonFile, err := os.Open(_jsonFile)
 	if err != nil {
@@ -215,38 +224,28 @@ func Text_Json_Parsing(_jsonFile string) map[byte]Glyph {
 	*/
 }
 
-func Text_Render_Text(textVert []float32, _sentence string) []float32 {
-	var x, y int
-	x = 10
-	y = 10
-	//length := len(_sentence) * 4
-	//var textVert []float32
+func Text_Render_Text(vert []float32, _sentence string) {
+	var sx, sy int
+	sx = 10
+	sy = 10
 
-	for _, v := range _sentence {
+	for i, v := range _sentence {
 		if byte(v) == 32 {
-			x = int(16 + float32(x))
+			sx += 16
 		} else {
-			glyph := mapping[byte(v)]
-			array := Text_Render_Char(glyph, x, y)
-			textVert = append(textVert, array...)
-			x = int(glyph.Xadvance + float32(x))
+			g := mapping[byte(v)]
+			x := float32(sx)
+			y := float32(sy)
+			X := g.W + x
+			Y := g.H + y
+			index := (i * 16)
+			copy(vert[index:index+16], []float32{
+				x, y, g.x, g.Y, // left-bottom
+				x, Y, g.x, g.y, // left-top
+				X, y, g.X, g.Y, // right-bottom
+				X, Y, g.X, g.y, // right-top
+			})
+			sx += int(g.Xadvance)
 		}
 	}
-	return textVert
-}
-
-func Text_Render_Char(g Glyph, _x int, _y int) []float32 {
-	x := float32(_x)
-	y := float32(_y)
-	X := g.W + x
-	Y := g.H + y
-
-	var vertices = []float32{
-		// X, Y, U, V
-		x, y, g.x, g.Y, // left-bottom
-		x, Y, g.x, g.y, // left-top
-		X, y, g.X, g.Y, // right-bottom
-		X, Y, g.X, g.y, // right-top
-	}
-	return vertices
 }

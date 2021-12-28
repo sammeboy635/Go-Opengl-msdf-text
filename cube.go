@@ -23,8 +23,9 @@ const (
 )
 
 func Draw_Cube(game *Game) {
-	cube := New_Cube(-0.5, 0.5, 0)
-	cube = append(cube, New_Cube(0.0, 0.0, 0)...)
+	cube := make([]float32, (4 * 12))
+	New_Cube(cube, 0, -0.5, 0.5)
+	New_Cube(cube, 1, -0.5, -0.5)
 	first := []int32{0, 4}
 	count := []int32{4, 4}
 	num := int32(2) //int32(len(cube) / 12)
@@ -73,19 +74,18 @@ func Create_Dynamic_Vao_Block(_size int) (uint32, uint32) {
 	return vao, vbo
 }
 
-func New_Cube(x float32, y float32, z float32) []float32 {
+func New_Cube(cube []float32, i int, x float32, y float32) {
 	X := x + size
 	Y := y + size
-
-	cube := []float32{
-		x, Y, z, //top left
-		x, y, z, //bottum left
-		X, Y, z, //top right
-		X, y, z, //bottum right
-	}
+	index := (i * 12)
+	copy(cube[index:index+12], []float32{
+		x, Y, 0, //top left
+		x, y, 0, //bottum left
+		X, Y, 0, //top right
+		X, y, 0, //bottum right
+	})
 	//Print_Cube(cube)
 
-	return cube
 }
 func New_Triangle(x float32, y float32, z float32) []float32 {
 	X := x + size
