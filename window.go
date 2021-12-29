@@ -5,7 +5,7 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-func Create_Window() *glfw.Window {
+func (g *Game) Create_Window() {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
@@ -25,16 +25,16 @@ func Create_Window() *glfw.Window {
 	if err != nil {
 		panic(err)
 	}
-	window.MakeContextCurrent()
 
 	//gl.Enable(gl.DEPTH_TEST)
 	//window.SetMouseButtonCallback(callback.mouse_button())
 
+	window.MakeContextCurrent()
 	window.SetFramebufferSizeCallback(window_size_callback)
 	window.SetKeyCallback(window_key_callback)
 	window.SetMouseButtonCallback(window_mouse_button_callback)
 
-	return window
+	g.win = window
 }
 
 func window_size_callback(win *glfw.Window, width int, height int) {

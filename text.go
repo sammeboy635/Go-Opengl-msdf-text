@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"image"
-	"image/draw"
 	"io/ioutil"
 	"os"
 
@@ -11,20 +9,25 @@ import (
 	mgl "github.com/go-gl/mathgl/mgl32"
 )
 
-func Draw_Text(game *Game) {
-	gl.UseProgram(game.drawText.program)
+type TextRender struct {
+	shader  DrawData
+	charMap map[byte]Glyph
+}
+
+func (t *TextRender) Draw_Text() {
+	//Use Program
+	gl.UseProgram(t.shader.program)
 
 	if textRendered == false {
 		var vertices = make([]float32, (len("Dildosers Test{69}") * 16))
-		Text_Render_Text(vertices, "Dildosers Test{69}")
+		t.Render_Text(vertices, "Dildosers Test{69}")
+
 		textLength = len(vertices) / 16
-		gl.BindVertexArray(game.drawText.VAO)
-		gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
+		gl.BindVertexArray(t.shader.VAO)
+		gl.BindBuffer(gl.ARRAY_BUFFER, t.shader.VAO)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
 		textRendered = true
 	}
-
-	//Use Program
 
 	//Blend Enable
 	gl.Enable(gl.BLEND)
@@ -32,10 +35,10 @@ func Draw_Text(game *Game) {
 
 	//Binding textures
 	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, game.drawText.image)
+	gl.BindTexture(gl.TEXTURE_2D, t.shader.image)
 
 	//Binding VAO and applying subdata
-	gl.BindVertexArray(game.drawText.VAO)
+	gl.BindVertexArray(t.shader.VAO)
 	//gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
 	//gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
 
@@ -51,30 +54,16 @@ func Draw_Text(game *Game) {
 	gl.BindVertexArray(0)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 }
-func New_Create_DrawData_Text() DrawData {
-	var drawData DrawData
-	drawData.program = Create_Program("shader/textFrag.shadder", "shader/textVert.shadder")
-	drawData.VAO, drawData.VBO = Create_Dynamic_Vao_Text(drawData.program, 2048)
-	drawData.VAOSize = 2048
-	Set_Program_Matrix(drawData.program)
-	drawData.image = loadImage("custom-msdf/custom.png")
+func (t *TextRender) Init() {
+	t.shader.Create_Program("shader/textFrag.shadder", "shader/textVert.shadder")
+	t.shader.Load_Image("custom-msdf/custom.png", gl.TEXTURE0)
+	t.Set_Program_Matric()
+	t.Create_Dynamic_VAO(2048)
 
-	return drawData
-}
-func Set_Program_Matrix(_program uint32) {
-
-	//Preparing for Projection Matrix
-	prjCStr, free := gl.Strs("projection") //Needs a free called after
-	defer free()
-	glProjectionLocation := gl.GetUniformLocation(_program, *prjCStr)
-	projection := mgl.Ortho2D(0, float32(width), 0.0, float32(height)) //Create a Ortho2d projection for
-
-	gl.UseProgram(_program)                                             //Bind program to set uninform in GPU
-	gl.UniformMatrix4fv(glProjectionLocation, 1, false, &projection[0]) //Setting Projections
-
+	t.charMap = Text_Json_Parsing("custom-msdf/custom-msdf.json")
 }
 
-func Create_Dynamic_Vao_Text(_program uint32, _size int) (uint32, uint32) {
+func (t *TextRender) Create_Dynamic_VAO(_size int) {
 
 	var vao, vbo uint32
 	//Gen the buffers
@@ -93,55 +82,22 @@ func Create_Dynamic_Vao_Text(_program uint32, _size int) (uint32, uint32) {
 	gl.EnableVertexAttribArray(0)
 	gl.VertexAttribPointer(0, 4, gl.FLOAT, false, 4*4, nil)
 
-	return vao, vbo
+	t.shader.VAO = vao
+	t.shader.VBO = vbo
+	t.shader.VAOSize = _size
 }
 
-//Loading image from file
-func loadImage(_file string) uint32 {
-	imgFile, err := os.Open(_file)
-	if err != nil {
-		println("Problem opening image:")
-		panic(err)
-	}
-	img, _, err := image.Decode(imgFile)
-	if err != nil {
-		println("Problem decoding the image:")
-		panic(err)
-	}
+func (t *TextRender) Set_Program_Matric() {
 
-	rgba := image.NewRGBA(img.Bounds())
-	if rgba.Stride != rgba.Rect.Size().X*4 {
-		panic("incorret stride")
-	}
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+	//Preparing for Projection Matrix
+	prjCStr, free := gl.Strs("projection") //Needs a free called after
+	defer free()
+	glProjectionLocation := gl.GetUniformLocation(t.shader.program, *prjCStr)
+	projection := mgl.Ortho2D(0, float32(width), 0.0, float32(height)) //Create a Ortho2d projection for
 
-	return loadTexture(rgba)
-}
-func loadTexture(_rgba *image.RGBA) uint32 {
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.ActiveTexture(gl.TEXTURE0)
+	gl.UseProgram(t.shader.program)                                     //Bind program to set uninform in GPU
+	gl.UniformMatrix4fv(glProjectionLocation, 1, false, &projection[0]) //Setting Projections
 
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-	gl.TexImage2D(
-		gl.TEXTURE_2D,
-		0,
-		gl.RGBA,
-		int32(_rgba.Rect.Size().X),
-		int32(_rgba.Rect.Size().Y),
-		0,
-		gl.RGBA,
-		gl.UNSIGNED_BYTE,
-		gl.Ptr(_rgba.Pix))
-
-	return texture
 }
 
 //-----JSON FOR TEXT ------
@@ -202,38 +158,28 @@ func Text_Json_Parsing(_jsonFile string) map[byte]Glyph {
 		mapping[glyph.Glyph[i].Id] = glyph.Glyph[i]
 	}
 	return mapping
-	/*for _, v := range mapping {
-		fmt.Println("x: ", v.x)
-		fmt.Println("y: ", v.y)
-		fmt.Println("X: ", v.X)
-		fmt.Println("Y: ", v.Y)
-		fmt.Println("width: ", v.W)
-		fmt.Println("height: ", v.H)
-		fmt.Println("Id: ", v.Id)
-	}*/
-	/* //Debugging print
-	for i := 0; i < len(glyph.Glyph); i++ {
-		fmt.Println("x: ", glyph.Glyph[i].x)
-		fmt.Println("y: ", glyph.Glyph[i].y)
-		fmt.Println("X: ", glyph.Glyph[i].X)
-		fmt.Println("Y: ", glyph.Glyph[i].Y)
-		fmt.Println("width: ", glyph.Glyph[i].W)
-		fmt.Println("height: ", glyph.Glyph[i].H)
-		fmt.Println("Id: ", glyph.Glyph[i].Id)
-	}
-	*/
+
+}
+func (g *Glyph) print() {
+	println("x: ", g.x)
+	println("y: ", g.y)
+	println("X: ", g.X)
+	println("Y: ", g.Y)
+	println("width: ", g.W)
+	println("height: ", g.H)
+	println("Id: ", g.Id)
 }
 
-func Text_Render_Text(vert []float32, _sentence string) {
+func (t *TextRender) Render_Text(vert []float32, _sentence string) {
 	var sx, sy int
 	sx = 10
 	sy = 10
 
 	for i, v := range _sentence {
-		if byte(v) == 32 {
+		if byte(v) == 32 { //Space
 			sx += 16
 		} else {
-			g := mapping[byte(v)]
+			g := t.charMap[byte(v)]
 			x := float32(sx)
 			y := float32(sy)
 			X := g.W + x

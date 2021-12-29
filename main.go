@@ -29,9 +29,10 @@ var (
 )
 
 type Game struct {
-	win       *glfw.Window
-	drawBlock DrawData
-	drawText  DrawData
+	win        *glfw.Window
+	cubeRender CubeRender
+	quadRender QuadRender
+	textRender TextRender
 }
 
 func bToMb(b uint64) uint64 {
@@ -48,27 +49,39 @@ func PrintMemUsage() {
 }
 
 func main() {
-	mapping = Text_Json_Parsing("custom-msdf/custom-msdf.json")
-	Text_Json_Parsing("custom-msdf/custom-msdf.json")
+
 	var game Game
 	runtime.LockOSThread()
-	game.win = Create_Window()
+
+	game.Create_Window()
+	game.quadRender.Init()
+	game.textRender.Init()
+	game.cubeRender.Init()
+
 	defer glfw.Terminate()
 
 	textRendered = false
 	cubeRendered = false
-	game.drawBlock = New_Create_DrawData_Block()
-	game.drawText = New_Create_DrawData_Text()
+
+	game.Main_Loop()
 	PrintMemUsage()
+}
+func (g *Game) Main_Loop() {
 	gl.ClearColor(0.5, 1, 1.0, 1)
-	for !game.win.ShouldClose() {
+	for !g.win.ShouldClose() {
 		time.Sleep(100 * time.Millisecond)
 		//PrintMemUsage()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		Draw_Text(&game)
-		Draw_Cube(&game)
+
+		//g.textRender.Draw_Text()
+		//g.quadRender.Draw_Quad()
+		g.cubeRender.Draw_Cube()
+
+		g.win.SwapBuffers()
 		glfw.PollEvents()
-		game.win.SwapBuffers()
 	}
+}
+
+func (g *Game) Init() {
 
 }

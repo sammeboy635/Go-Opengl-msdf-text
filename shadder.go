@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
 	_ "image/png"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -17,7 +20,7 @@ type DrawData struct {
 	image   uint32
 }
 
-func Create_Program(_fragmentShaderSource string, _vertexShaderSource string) uint32 {
+func (d *DrawData) Create_Program(_fragmentShaderSource string, _vertexShaderSource string) {
 
 	//Todo have a debug const for printing errors
 	//version := gl.GoStr(gl.GetString(gl.VERSION))
@@ -59,7 +62,7 @@ func Create_Program(_fragmentShaderSource string, _vertexShaderSource string) ui
 	gl.DeleteShader(vertexShader)
 	gl.DeleteShader(fragmentShader)
 
-	return prog
+	d.program = prog
 }
 
 func Compile_Shader(source string, shaderType uint32) (uint32, error) {
@@ -95,3 +98,50 @@ func Read_File(_location string) string {
 }
 
 // loadImage opens an image file, upload it the the GPU and returns the texture id
+//Loading image from file
+func (d *DrawData) Load_Image(_file string, _texId uint32) {
+	imgFile, err := os.Open(_file)
+	if err != nil {
+		println("Problem opening image:")
+		panic(err)
+	}
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		println("Problem decoding the image:")
+		panic(err)
+	}
+
+	rgba := image.NewRGBA(img.Bounds())
+	if rgba.Stride != rgba.Rect.Size().X*4 {
+		panic("incorret stride")
+	}
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+
+	d.image = loadTexture(rgba, _texId)
+}
+func loadTexture(_rgba *image.RGBA, _texId uint32) uint32 {
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.ActiveTexture(_texId)
+
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+	gl.TexImage2D(
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(_rgba.Rect.Size().X),
+		int32(_rgba.Rect.Size().Y),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(_rgba.Pix))
+
+	return texture
+}

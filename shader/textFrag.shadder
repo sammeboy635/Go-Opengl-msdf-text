@@ -1,18 +1,10 @@
 #version 410
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#define COMPAT_FRAGCOLOR FragColor
-out vec4 COMPAT_FRAGCOLOR;
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
-#define COMPAT_FRAGCOLOR gl_FragColor
-#endif
+
 uniform sampler2D Texture;
+
 in vec2 fragTexCoord;
+
+out vec4 COMPAT_FRAGCOLOR;
 
 float median(float r, float g, float b) {
 	return max(min(r, g), min(max(r, g), b));
@@ -28,6 +20,4 @@ void main() {
 	float w = fwidth(sigDist);
 	float opacity = smoothstep(0.5 - w, 0.5 + w, sigDist);
 	COMPAT_FRAGCOLOR = vec4(vec3(0.5,0.5,1.0), opacity);
-	//COMPAT_FRAGCOLOR = vec4(1, 1, 1, 1.0);
-
 }
