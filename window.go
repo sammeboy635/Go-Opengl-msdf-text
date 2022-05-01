@@ -6,6 +6,7 @@ import (
 )
 
 func (g *Game) Create_Window() {
+
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
@@ -21,7 +22,7 @@ func (g *Game) Create_Window() {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	window, err := glfw.CreateWindow(width, height, "Sam Waite", nil, nil)
+	window, err := glfw.CreateWindow(win_width, win_height, "Sam Waite", nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -33,12 +34,13 @@ func (g *Game) Create_Window() {
 	window.SetFramebufferSizeCallback(window_size_callback)
 	window.SetKeyCallback(window_key_callback)
 	window.SetMouseButtonCallback(window_mouse_button_callback)
-
 	g.win = window
 }
 
 func window_size_callback(win *glfw.Window, width int, height int) {
-	println("hello")
+	win_width = width
+	win_height = height
+	game.textRender.Set_Program_Matric()
 }
 func window_key_callback(win *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	println(key, action, mods)

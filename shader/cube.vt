@@ -12,5 +12,5 @@ out vec2 fragTexCoord;
 //in vec3 vp;
 void main() {
     fragTexCoord = vertTexCoord;
-    gl_Position = projection * camera  * model * vec4(vp, 1.0);
+    gl_Position = projection * vec4(vp, 1.0);
 }

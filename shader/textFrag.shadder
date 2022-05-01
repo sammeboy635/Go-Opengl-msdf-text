@@ -11,12 +11,12 @@ float median(float r, float g, float b) {
 }
 
 void main() {
-	vec3 sampler2D = texture(Texture, fragTexCoord).rgb;
+	vec3 sampl2D = texture(Texture, fragTexCoord).rgb;
 	ivec2 sz = textureSize(Texture, 0).xy;
 	float dx = dFdx(fragTexCoord.x) * sz.x;
 	float dy = dFdy(fragTexCoord.y) * sz.y;
 	float toPixels = 8.0 * inversesqrt(dx * dx + dy * dy);
-	float sigDist = median(sampler2D.r, sampler2D.g, sampler2D.b);
+	float sigDist = median(sampl2D.r, sampl2D.g, sampl2D.b);
 	float w = fwidth(sigDist);
 	float opacity = smoothstep(0.5 - w, 0.5 + w, sigDist);
 	COMPAT_FRAGCOLOR = vec4(vec3(0.5,0.5,1.0), opacity);

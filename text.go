@@ -8,7 +8,8 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	mgl "github.com/go-gl/mathgl/mgl32"
 )
-
+var abcs = "abcdefghijklmnopqrstuvwxyz"
+var ABCS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 type TextRender struct {
 	shader  DrawData
 	charMap map[byte]Glyph
@@ -19,8 +20,8 @@ func (t *TextRender) Draw_Text() {
 	gl.UseProgram(t.shader.program)
 
 	if textRendered == false {
-		var vertices = make([]float32, (len("Dildosers Test{69}") * 16))
-		t.Render_Text(vertices, "Dildosers Test{69}")
+		var vertices = make([]float32, (len(abcs) * 16))
+		t.Render_Text(vertices, abcs)
 
 		textLength = len(vertices) / 16
 		gl.BindVertexArray(t.shader.VAO)
@@ -93,7 +94,7 @@ func (t *TextRender) Set_Program_Matric() {
 	prjCStr, free := gl.Strs("projection") //Needs a free called after
 	defer free()
 	glProjectionLocation := gl.GetUniformLocation(t.shader.program, *prjCStr)
-	projection := mgl.Ortho2D(0, float32(width), 0.0, float32(height)) //Create a Ortho2d projection for
+	projection := mgl.Ortho2D(0, float32(win_width), 0.0, float32(win_height)) //Create a Ortho2d projection for
 
 	gl.UseProgram(t.shader.program)                                     //Bind program to set uninform in GPU
 	gl.UniformMatrix4fv(glProjectionLocation, 1, false, &projection[0]) //Setting Projections
@@ -107,6 +108,8 @@ type Glyph struct {
 	y        float32
 	X        float32 `json:"x"`
 	Y        float32 `json:"y"`
+	OffX     float32 `json:"xoffset"`
+	OffY     float32 `json:"yoffset"`
 	W        float32 `json:"width"`
 	H        float32 `json:"height"`
 	Xadvance float32 `json:"xadvance"`
@@ -182,8 +185,8 @@ func (t *TextRender) Render_Text(vert []float32, _sentence string) {
 			g := t.charMap[byte(v)]
 			x := float32(sx)
 			y := float32(sy)
-			X := g.W + x
-			Y := g.H + y
+			X := g.W + float32(sx)
+			Y := g.H + float32(sy)
 			index := (i * 16)
 			copy(vert[index:index+16], []float32{
 				x, y, g.x, g.Y, // left-bottom

@@ -9,10 +9,10 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-const (
-	width  = 500
-	height = 500
-)
+
+var	win_width int = 500
+var	win_height int = 500
+
 
 var mapping map[byte]Glyph
 var textRendered bool
@@ -27,11 +27,11 @@ var (
 		0.5, -0.5, 0,
 	}
 )
+var game Game
 
 type Game struct {
-	win        *glfw.Window
-	cubeRender CubeRender
-	quadRender QuadRender
+	win *glfw.Window
+	//quadRender QuadRender
 	textRender TextRender
 }
 
@@ -48,15 +48,29 @@ func PrintMemUsage() {
 	fmt.Printf("\tNumGC = %v\n", m.NumGC)
 }
 
-func main() {
 
-	var game Game
+func (g *Game) Main_Loop() {
+	gl.ClearColor(0.0, 0.0, 0.0, 1)
+	for !g.win.ShouldClose() {
+		time.Sleep(100 * time.Millisecond)
+
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+		g.textRender.Draw_Text()
+		//g.quadRender.Draw_Quad()
+		//g.cubeRender.Draw_Cube()
+
+		g.win.SwapBuffers()
+		glfw.PollEvents()
+	}
+}
+
+func main() {
 	runtime.LockOSThread()
 
 	game.Create_Window()
-	game.quadRender.Init()
+	//game.quadRender.Init()
 	game.textRender.Init()
-	game.cubeRender.Init()
 
 	defer glfw.Terminate()
 
@@ -65,23 +79,4 @@ func main() {
 
 	game.Main_Loop()
 	PrintMemUsage()
-}
-func (g *Game) Main_Loop() {
-	gl.ClearColor(0.5, 1, 1.0, 1)
-	for !g.win.ShouldClose() {
-		time.Sleep(100 * time.Millisecond)
-		//PrintMemUsage()
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-		//g.textRender.Draw_Text()
-		//g.quadRender.Draw_Quad()
-		g.cubeRender.Draw_Cube()
-
-		g.win.SwapBuffers()
-		glfw.PollEvents()
-	}
-}
-
-func (g *Game) Init() {
-
 }
