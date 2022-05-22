@@ -48,7 +48,7 @@ func (q *QuadRender) Set_Program_Matric() {
 	prjCStr, free := gl.Strs("projection") //Needs a free called after
 	defer free()
 	glProjectionLocation := gl.GetUniformLocation(q.shader.program, *prjCStr)
-	projection := mgl.Ortho2D(0, float32(win_width), 0.0, float32(win_height)) //Create a Ortho2d projection for
+	projection := mgl.Ortho2D(0.0, float32(win_width), 0.0, float32(win_height)) //Create a Ortho2d projection for
 
 	gl.UseProgram(q.shader.program)                                     //Bind program to set uninform in GPU
 	gl.UniformMatrix4fv(glProjectionLocation, 1, false, &projection[0]) //Setting Projections

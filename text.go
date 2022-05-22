@@ -2,14 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	mgl "github.com/go-gl/mathgl/mgl32"
 )
-var abcs = "abcdefghijklmnopqrstuvwxyz"
-var ABCS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+var abcs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+var whatTime = "Time is "
 type TextRender struct {
 	shader  DrawData
 	charMap map[byte]Glyph
@@ -20,14 +22,15 @@ func (t *TextRender) Draw_Text() {
 	gl.UseProgram(t.shader.program)
 
 	if textRendered == false {
-		var vertices = make([]float32, (len(abcs) * 16))
-		t.Render_Text(vertices, abcs)
+		newtime := fmt.Sprintf("%s%s",whatTime, time.Now().String())
+		var vertices = make([]float32, (len(newtime) * 16))
+		t.Render_Text(vertices, newtime)
 
-		textLength = len(vertices) / 16
+		textLength = len(abcs) // len(vertices) / 16 
 		gl.BindVertexArray(t.shader.VAO)
 		gl.BindBuffer(gl.ARRAY_BUFFER, t.shader.VAO)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
-		textRendered = true
+		//textRendered = true
 	}
 
 	//Blend Enable
@@ -59,13 +62,12 @@ func (t *TextRender) Init() {
 	t.shader.Create_Program("shader/textFrag.shadder", "shader/textVert.shadder")
 	t.shader.Load_Image("custom-msdf/custom.png", gl.TEXTURE0)
 	t.Set_Program_Matric()
-	t.Create_Dynamic_VAO(2048)
+	t.Create_Dynamic_VAO(4096)
 
 	t.charMap = Text_Json_Parsing("custom-msdf/custom-msdf.json")
 }
 
 func (t *TextRender) Create_Dynamic_VAO(_size int) {
-
 	var vao, vbo uint32
 	//Gen the buffers
 	gl.GenVertexArrays(1, &vao)
@@ -108,8 +110,7 @@ type Glyph struct {
 	y        float32
 	X        float32 `json:"x"`
 	Y        float32 `json:"y"`
-	OffX     float32 `json:"xoffset"`
-	OffY     float32 `json:"yoffset"`
+	OffY     float32 `json:"offy"`
 	W        float32 `json:"width"`
 	H        float32 `json:"height"`
 	Xadvance float32 `json:"xadvance"`
@@ -118,7 +119,6 @@ type Glyph struct {
 type Glyphs struct {
 	Glyph []Glyph `json:"chars"`
 }
-
 func Text_Json_Parsing(_jsonFile string) map[byte]Glyph {
 	//todo: take out const of img size
 	//Parses custom-msdf.json for information to how each charater is mapped inside the custom.png
@@ -174,27 +174,33 @@ func (g *Glyph) print() {
 }
 
 func (t *TextRender) Render_Text(vert []float32, _sentence string) {
-	var sx, sy int
+	//start := time.Now()
+	var scale float32 = 0.5
+	var sx, sy float32
 	sx = 10
 	sy = 10
 
 	for i, v := range _sentence {
-		if byte(v) == 32 { //Space
-			sx += 16
-		} else {
-			g := t.charMap[byte(v)]
-			x := float32(sx)
-			y := float32(sy)
-			X := g.W + float32(sx)
-			Y := g.H + float32(sy)
-			index := (i * 16)
-			copy(vert[index:index+16], []float32{
-				x, y, g.x, g.Y, // left-bottom
-				x, Y, g.x, g.y, // left-top
-				X, y, g.X, g.Y, // right-bottom
-				X, Y, g.X, g.y, // right-top
-			})
-			sx += int(g.Xadvance)
+		if byte(v) == 32{ // Space so move forward
+			sx += 16 * scale // TODO * by scale
+			
+			continue
 		}
+		g := t.charMap[byte(v)]
+		x := sx
+		y := (sy + (g.OffY * scale))
+		X := ((g.W * scale) + x) 
+		Y := ((g.H * scale) + y) 
+		index := (i * 16) 
+		copy(vert[index:index+16], []float32{
+			x, y, g.x, g.Y, // left-bottom (pos, pos, tex, tex)
+			x, Y, g.x, g.y, // left-top
+			X, y, g.X, g.Y, // right-bottom
+			X, Y, g.X, g.y, // right-top
+		})
+		sx += g.Xadvance * scale
+		
 	}
+	//elapsed := time.Since(start)
+	//log.Printf("Binomial took %s", elapsed)
 }

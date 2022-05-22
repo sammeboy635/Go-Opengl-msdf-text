@@ -10,8 +10,8 @@ import (
 )
 
 
-var	win_width int = 500
-var	win_height int = 500
+var	win_width int = 1280
+var	win_height int = 900
 
 
 var mapping map[byte]Glyph
@@ -31,7 +31,7 @@ var game Game
 
 type Game struct {
 	win *glfw.Window
-	//quadRender QuadRender
+	quadRender QuadRender
 	textRender TextRender
 }
 
@@ -54,10 +54,10 @@ func (g *Game) Main_Loop() {
 	for !g.win.ShouldClose() {
 		time.Sleep(100 * time.Millisecond)
 
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)		
+		
+		g.quadRender.Draw_Quad()
 		g.textRender.Draw_Text()
-		//g.quadRender.Draw_Quad()
 		//g.cubeRender.Draw_Cube()
 
 		g.win.SwapBuffers()
@@ -66,10 +66,10 @@ func (g *Game) Main_Loop() {
 }
 
 func main() {
-	runtime.LockOSThread()
+	runtime.LockOSThread() // Graphic communication needs to be off one CPU
 
 	game.Create_Window()
-	//game.quadRender.Init()
+	game.quadRender.Init()
 	game.textRender.Init()
 
 	defer glfw.Terminate()
