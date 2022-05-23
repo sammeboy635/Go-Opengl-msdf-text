@@ -21,10 +21,12 @@ func (q *QuadRender) Draw_Quad() {
 
 	New_Quad(cube, 0, 200, 200)
 	New_Quad(cube, 1, 175, 175)
-
-	first := []int32{0, 4}
-	count := []int32{4, 4}
-	num := int32(2) //int32(len(cube) / 12)
+	New_Quad(cube, 2, 125, 125)
+	New_Quad(cube, 3, 100, 100)
+	Print_Cube(cube)
+	first := []int32{0, 4, 8,12}
+	count := []int32{4, 4, 4,4}
+	num := int32(4) //int32(len(cube) / 12)
 	gl.UseProgram(q.shader.program)
 
 	gl.BindVertexArray(q.shader.VAO)
@@ -39,7 +41,7 @@ func (q *QuadRender) Draw_Quad() {
 
 func (q *QuadRender) Init() {
 	q.shader.Create_Program("shader/frag.shadder", "shader/vert.shadder")
-	q.Create_Dynamic_VAO(1024)
+	q.Create_Dynamic_VAO(2048)
 	q.Set_Program_Matric()
 }
 func (q *QuadRender) Set_Program_Matric() {
@@ -100,7 +102,12 @@ func New_Triangle(x float32, y float32, z float32) []float32 {
 	return triangle
 }
 func Print_Cube(cube []float32) {
-	for c := range cube {
-		fmt.Printf("%v", c)
+	cubeNum := len(cube) / 12
+	for x := 0; x < cubeNum; x++ {
+		for y := 0; y < 12; y++ {
+			fmt.Printf("%v,", cube[(12 * x) + y])
+		}
+		fmt.Println("")
 	}
+	fmt.Println("")
 }

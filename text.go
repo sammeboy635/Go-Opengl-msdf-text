@@ -46,10 +46,23 @@ func (t *TextRender) Draw_Text() {
 	//gl.BindBuffer(gl.ARRAY_BUFFER, game.drawText.VAO)
 	//gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
 
-	i := 0
-	for ; i <= textLength; i += 1 {
-		gl.DrawArrays(gl.TRIANGLE_STRIP, int32(i*4), 4)
+	
+	first := make([]int32,textLength)
+	count := make([]int32,textLength)
+	for i := 0; i < textLength; i++ {
+		first[i] = int32(i) * 4
+		count[i] = 4
 	}
+	gl.MultiDrawArrays(gl.TRIANGLE_STRIP, &first[0], &count[0], int32(textLength))
+	
+	// i := 0
+	// for ; i <= textLength; i += 1 {
+	// 	gl.DrawArrays(gl.TRIANGLE_STRIP, int32(i*4), 4)
+	// }
+	// first := []int32{0, 4, 8, 12}
+	// count := []int32{4, 4, 4, 4}
+	//num := int32(4)
+	
 
 	//vertices = nil
 	//Unbiding Everything
