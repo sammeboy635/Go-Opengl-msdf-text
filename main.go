@@ -50,16 +50,18 @@ func PrintMemUsage() {
 
 
 func (g *Game) Main_Loop() {
-	gl.ClearColor(0.0, 0.0, 0.0, 1)
+	gl.ClearColor(0.5, 0.5, 0.5, 1)
 	for !g.win.ShouldClose() {
 		time.Sleep(100 * time.Millisecond)
 
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)		
-		
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)	
+		start := time.Now()
+	
 		g.quadRender.Draw_Quad()
 		g.textRender.Draw_Text()
 		//g.cubeRender.Draw_Cube()
-
+		elapsed := time.Since(start)
+		fmt.Println(elapsed)
 		g.win.SwapBuffers()
 		glfw.PollEvents()
 	}

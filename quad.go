@@ -23,9 +23,9 @@ func (q *QuadRender) Draw_Quad() {
 	New_Quad(cube, 1, 175, 175)
 	New_Quad(cube, 2, 125, 125)
 	New_Quad(cube, 3, 100, 100)
-	Print_Cube(cube)
-	first := []int32{0, 4, 8,12}
-	count := []int32{4, 4, 4,4}
+	//Print_Cube(cube)
+	first := []int32{0, 4, 8, 12}
+	count := []int32{4, 4, 4, 4}
 	num := int32(4) //int32(len(cube) / 12)
 	gl.UseProgram(q.shader.program)
 

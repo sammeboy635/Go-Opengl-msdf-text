@@ -54,7 +54,7 @@ func (t *TextRender) Draw_Text() {
 		count[i] = 4
 	}
 	gl.MultiDrawArrays(gl.TRIANGLE_STRIP, &first[0], &count[0], int32(textLength))
-	
+
 	// i := 0
 	// for ; i <= textLength; i += 1 {
 	// 	gl.DrawArrays(gl.TRIANGLE_STRIP, int32(i*4), 4)
@@ -187,7 +187,6 @@ func (g *Glyph) print() {
 }
 
 func (t *TextRender) Render_Text(vert []float32, _sentence string) {
-	//start := time.Now()
 	var scale float32 = 0.5
 	var sx, sy float32
 	sx = 10
@@ -214,6 +213,4 @@ func (t *TextRender) Render_Text(vert []float32, _sentence string) {
 		sx += g.Xadvance * scale
 		
 	}
-	//elapsed := time.Since(start)
-	//log.Printf("Binomial took %s", elapsed)
 }
